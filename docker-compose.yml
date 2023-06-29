@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  polaris-cp-pg:
+    container_name: polaris-cp-pg
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_DB: ${PGDATABASE}
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    volumes:
+      - polaris-cp-pgdata:/var/lib/postgresql/data
+
+volumes:
+  polaris-cp-pgdata:
