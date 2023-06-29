@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: $CONFIG_DIRECTORY
+        working-directory: ${{ env.CONFIG_DIRECTORY }}
         
     permissions:
       id-token: write
