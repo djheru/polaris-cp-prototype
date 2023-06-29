@@ -1,0 +1,44 @@
+name: Manual trigger for Terraform deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Test scenario tags'
+
+jobs:
+  terraform:
+    name: 'Terraform deployment'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          tf_actions_working_dir: './terraform'
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -var="log_level=${{ github.event.inputs.logLevel }}"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="log_level=${{ github.event.inputs.logLevel }}"
+
+      - name: Terraform output
+        run: terraform output
