@@ -17,6 +17,10 @@ jobs:
   terraform:
     name: 'Terraform deployment'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: $CONFIG_DIRECTORY
+        
     permissions:
       id-token: write
       contents: read
