@@ -12,7 +12,7 @@ on:
 
 env:
   CONFIG_DIRECTORY: './terraform'
-  
+
 jobs:
   terraform:
     name: 'Terraform deployment'
@@ -34,8 +34,6 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-        with:
-          tf_actions_working_dir: './terraform'
 
       - name: Terraform Init
         run: terraform init
