@@ -12,9 +12,9 @@ export const AppDataSource = new DataSource({
   password: process.env.PGPASSWORD,
   database: process.env.PGDATABASE,
   entities: ['src/**/entities/**/*.entity.ts'],
-  migrations: ['src/migrations/*.ts'],
+  migrations: ['src/common/migrations/*.ts'],
   synchronize: false,
   cli: {
-    migrationsDir: 'src/migrations',
+    migrationsDir: 'src/common/migrations',
   },
 } as DataSourceOptions);

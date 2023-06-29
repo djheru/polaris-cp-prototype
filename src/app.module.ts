@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import databaseConfig, { databases } from './common/config/database.config';
+import { TemplatesModule } from './templates/templates.module';
 
 export const appModuleDocumentation = (app: INestApplication): void => {
   const options = new DocumentBuilder()
@@ -29,6 +30,7 @@ export const appModuleDocumentation = (app: INestApplication): void => {
       useFactory: (configService: ConfigService) =>
         configService.get(databases.POLARIS_CP),
     }),
+    TemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
