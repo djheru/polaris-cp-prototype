@@ -1,83 +1,74 @@
-variable "awsprops" {
-  type = "map"
-  default = {
-    region = "us-east-1"
-    vpc = "vpc-5234832d"
-    ami = "ami-0c1bea58988a989155"
-    itype = "t2.micro"
-    subnet = "subnet-81896c8e"
-    publicip = true
-    keyname = "myseckey"
-    secgroupname = "IAC-Sec-Group"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "4.52.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.4.3"
+    }
   }
+  required_version = ">= 1.1.0"
 }
 
 provider "aws" {
-  region = lookup(var.awsprops, "region")
+  region = "us-east-1"
 }
 
-resource "aws_security_group" "project-iac-sg" {
-  name = lookup(var.awsprops, "secgroupname")
-  description = lookup(var.awsprops, "secgroupname")
-  vpc_id = lookup(var.awsprops, "vpc")
+resource "random_pet" "sg" {}
 
-  // To Allow SSH Transport
-  ingress {
-    from_port = 22
-    protocol = "tcp"
-    to_port = 22
-    cidr_blocks = ["0.0.0.0/0"]
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
-  // To Allow Port 80 Transport
-  ingress {
-    from_port = 80
-    protocol = ""
-    to_port = 80
-    cidr_blocks = ["0.0.0.0/0"]
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_instance" "web" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  vpc_security_group_ids = [aws_security_group.web-sg.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update
+              apt-get install -y apache2
+              sed -i -e 's/80/8080/' /etc/apache2/ports.conf
+              echo "Hello World" > /var/www/html/index.html
+              systemctl restart apache2
+              EOF
+}
+
+resource "aws_security_group" "web-sg" {
+  name = "${random_pet.sg.id}-sg"
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  // connectivity to ubuntu mirrors is required to run `apt-get update` and `apt-get install apache2`
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
-
-resource "aws_instance" "project-iac" {
-  ami = lookup(var.awsprops, "ami")
-  instance_type = lookup(var.awsprops, "itype")
-  subnet_id = lookup(var.awsprops, "subnet") #FFXsubnet2
-  associate_public_ip_address = lookup(var.awsprops, "publicip")
-  key_name = lookup(var.awsprops, "keyname")
-
-
-  vpc_security_group_ids = [
-    aws_security_group.project-iac-sg.id
-  ]
-  root_block_device {
-    delete_on_termination = true
-    iops = 150
-    volume_size = 50
-    volume_type = "gp2"
-  }
-  tags = {
-    Name ="SERVER01"
-    Environment = "DEV"
-    OS = "UBUNTU"
-    Managed = "IAC"
-  }
-
-  depends_on = [ aws_security_group.project-iac-sg ]
-}
-
-
-output "ec2instance" {
-  value = aws_instance.project-iac.public_ip
+output "web-address" {
+  value = "${aws_instance.web.public_dns}:8080"
 }
