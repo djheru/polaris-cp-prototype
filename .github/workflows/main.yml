@@ -44,11 +44,11 @@ jobs:
 
       - name: Terraform Plan
         # run: terraform plan -var="log_level=${{ github.event.inputs.logLevel }}"
-        run: terraform plan"
+        run: terraform plan
 
       - name: Terraform Apply
         # run: terraform apply -auto-approve -var="log_level=${{ github.event.inputs.logLevel }}"
-        run: terraform apply -auto-approve"
+        run: terraform apply -auto-approve
 
       - name: Terraform output
         run: terraform output
