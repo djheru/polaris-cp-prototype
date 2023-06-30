@@ -1,48 +1,22 @@
-terraform {
-  backend "s3" {
-    key            = "state"
-    encrypt        = true
+resource "aws_instance" "application" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  subnet_id     = var.subnet_id
+  vpc_security_group_ids = [var.sg_id]
+  
+  user_data = <<-EOF
+    #!/bin/bash
+    apt-get update
+    apt-get install -y apache2
+    sed -i -e 's/80/8080/' /etc/apache2/ports.conf
+    echo "${var.app_id}" > /var/www/html/index.html
+    systemctl restart apache2
+  EOF
+
+  tags = {
+    Name          = "${var.app_name}"
+    applicationId = "${var.app_id}"
   }
-}
-
-provider "aws" {
-  region = "us-east-1"
-}
-
-module "VizVectar" {
-  source    = "./module"
-  app_id    = var.applications["VizVectar"]
-  ami_id    = var.ami_id
-  subnet_id = var.subnet_id
-  sg_id     = var.security_group_id
-  instance_type = var.instance_type
-}
-
-module "Chyron" {
-  source    = "./module"
-  app_id    = var.applications["Chyron"]
-  ami_id    = var.ami_id
-  subnet_id = var.subnet_id
-  sg_id     = var.security_group_id
-  instance_type = var.instance_type
-}
-
-module "TagVS" {
-  source    = "./module"
-  app_id    = var.applications["TagVS"]
-  ami_id    = var.ami_id
-  subnet_id = var.subnet_id
-  sg_id     = var.security_group_id
-  instance_type = var.instance_type
-}
-
-module "Telos" {
-  source    = "./module"
-  app_id    = var.applications["Telos"]
-  ami_id    = var.ami_id
-  subnet_id = var.subnet_id
-  sg_id     = var.security_group_id
-  instance_type = var.instance_type
 }
 
 # terraform {

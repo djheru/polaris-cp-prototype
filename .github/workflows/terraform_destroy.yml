@@ -1,0 +1,46 @@
+name: 'Terraform Destroy'
+
+on:
+  workflow_dispatch:
+    inputs:
+      awsAccountId:
+        description: 'AWS Account Id'
+        required: true
+      awsRegion:
+        description: 'AWS Region'
+        required: true
+      applicationId:
+        description: 'Application Id'
+        required: true
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 0.12.x
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Terraform Plan Destroy
+      run: terraform plan -destroy -var-file="application.tfvars.json"
+
+    - name: Terraform Apply Destroy
+      run: terraform destroy -auto-approve -var-file="application.tfvars.json"
+
+    - name: Cleanup S3 Bucket and DynamoDB Table
+      run: bash ./scripts/cleanup_resources.sh ${{ github.event.inputs.applicationId }} ${{ github.event.inputs.awsAccountId }} ${{ github.event.inputs.awsRegion }}

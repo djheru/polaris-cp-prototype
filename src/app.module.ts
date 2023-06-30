@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import databaseConfig, { databases } from './common/config/database.config';
 import { TemplatesModule } from './templates/templates.module';
+import { GithubActionsModule } from './github-actions/github-actions.module';
 
 export const appModuleDocumentation = (app: INestApplication): void => {
   const options = new DocumentBuilder()
@@ -31,6 +32,7 @@ export const appModuleDocumentation = (app: INestApplication): void => {
         configService.get(databases.POLARIS_CP),
     }),
     TemplatesModule,
+    GithubActionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

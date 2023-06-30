@@ -1,0 +1,46 @@
+name: 'Terraform Apply'
+
+on:
+  workflow_dispatch:
+    inputs:
+      awsAccountId:
+        description: 'AWS Account Id'
+        required: true
+      awsRegion:
+        description: 'AWS Region'
+        required: true
+      applicationId:
+        description: 'Application Id'
+        required: true
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 0.12.x
+
+    - name: Check and Create S3 Bucket and DynamoDB Table
+      run: bash ./scripts/check_and_create_bucket.sh ${{ github.event.inputs.applicationId }} ${{ github.event.inputs.awsAccountId }} ${{ github.event.inputs.awsRegion }}
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Terraform Plan
+      run: terraform plan -var-file="application.tfvars.json"
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve -var-file="application.tfvars.json"
